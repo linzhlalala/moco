@@ -24,14 +24,15 @@ import torchvision.models as models
 
 import moco.loader
 import moco.builder
+from moco.MRGdataset import MRGDataset
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
     and callable(models.__dict__[name]))
 
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-parser.add_argument('--data',  type =str, default='../tinyimagenet',metavar='DIR',
-                    help='path to dataset')
+parser.add_argument('--dataset_name',  type =str, default='iu_xray',
+                    help='tinyimagenet/iu_xray/mimic_cxr_256')
 parser.add_argument('-a', '--arch', type =str, default='resnet18',metavar='ARCH', 
                     choices=model_names,
                     help='model architecture: ' +
@@ -43,12 +44,12 @@ parser.add_argument('--epochs', default=5, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=256, type=int,
+parser.add_argument('-b', '--batch-size', default=8, type=int,
                     metavar='N',
                     help='mini-batch size (default: 256), this is the total '
                          'batch size of all GPUs on the current node when '
                          'using Data Parallel or Distributed Data Parallel')
-parser.add_argument('--lr', '--learning-rate', default=0.03, type=float,
+parser.add_argument('--lr', '--learning-rate', default=0.001, type=float,
                     metavar='LR', help='initial learning rate', dest='lr')
 parser.add_argument('--schedule', default=[120, 160], nargs='*', type=int,
                     help='learning rate schedule (when to drop lr by 10x)')
@@ -193,6 +194,7 @@ def main_worker(gpu, ngpus_per_node, args):
         #raise NotImplementedError("Only DistributedDataParallel is supported.")        
         model.cuda()
         print("run with no DistributedDataParallel")
+    print("device:",torch.cuda.current_device())
 
     # define loss function (criterion) and optimizer
     if args.gpu is not None:
@@ -225,7 +227,6 @@ def main_worker(gpu, ngpus_per_node, args):
     cudnn.benchmark = True
 
     # Data loading code
-    traindir = os.path.join(args.data, 'train')
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
     if args.aug_plus:
@@ -251,10 +252,14 @@ def main_worker(gpu, ngpus_per_node, args):
             transforms.ToTensor(),
             normalize
         ]
-
-    train_dataset = datasets.ImageFolder(
-        traindir,
-        moco.loader.TwoCropsTransform(transforms.Compose(augmentation)))
+    if args.dataset_name == 'tinyimagenet':
+        traindir = os.path.join('..','tinyimagenet', 'train')
+        train_dataset = datasets.ImageFolder(
+            traindir,
+            transform = moco.loader.TwoCropsTransform(transforms.Compose(augmentation)))
+    elif args.dataset_name in ['iu_xray','mimic_cxr_256']:
+        train_dataset = MRGDataset(
+            args,'train',transform = moco.loader.TwoCropsTransform(transforms.Compose(augmentation)))
 
     if args.distributed:
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
