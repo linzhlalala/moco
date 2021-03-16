@@ -34,6 +34,8 @@ model_names = sorted(name for name in models.__dict__
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('--dataset_name',  type =str, default='iu_xray',
                     help='tinyimagenet/iu_xray/mimic_cxr_256')
+parser.add_argument('--job_name',  type =str, default='dfpara',
+                    help='tinyimagenet/iu_xray/mimic_cxr_256')
 parser.add_argument('-a', '--arch', type =str, default='resnet101',metavar='ARCH', 
                     choices=model_names,
                     help='model architecture: ' +
@@ -271,8 +273,11 @@ def main_worker(gpu, ngpus_per_node, args):
         train_dataset, batch_size=args.batch_size, shuffle=(train_sampler is None),
         num_workers=args.workers, pin_memory=True, sampler=train_sampler, drop_last=True)
 
-    log_path = os.path.join('logs',args.dataset_name)
-    record_path = os.path.join(log_path,args.dataset_name+'.csv')
+    log_path = os.path.join('logs',args.job_name)
+    if not os.path.exists(log_path):
+            os.makedirs(log_path)
+            
+    record_path = os.path.join(log_path,'logs.csv')
 
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
