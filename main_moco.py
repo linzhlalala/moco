@@ -279,6 +279,9 @@ def main_worker(gpu, ngpus_per_node, args):
             
     record_path = os.path.join(log_path,args.job_name+'.csv')
 
+    best_acc1 = 0
+    best_log = {}
+
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
@@ -286,7 +289,10 @@ def main_worker(gpu, ngpus_per_node, args):
         # train for one epoch
         lossvalue,acc1,acc5,epoch_time = train(train_loader, model, criterion, optimizer, epoch, args)
         log = {'epoch': epoch + 1,'loss':lossvalue,'acc1':acc1,'acc5':acc5,'epoch_time':epoch_time}
+        
         print_log_tocsv(log,record_path)
+
+        is_best = True if acc1 >= best_acc1 else False            
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
@@ -295,8 +301,10 @@ def main_worker(gpu, ngpus_per_node, args):
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
                 'optimizer' : optimizer.state_dict(),
-            }, is_best=False, filename=os.path.join(log_path,'checkpoint_{:04d}.pth.tar'.format(epoch)))
-        
+            }, is_best=is_best, filename=os.path.join(log_path,'checkpoint_{:04d}.pth.tar'.format(epoch)))
+    
+    best_log['best_flag'] = 1
+    print_log_tocsv(best_log,record_path)
 
 def print_log_tocsv(log,filename):
     crt_time = time.asctime(time.localtime(time.time()))
