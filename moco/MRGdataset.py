@@ -45,7 +45,7 @@ def default_loader(path):
         return pil_loader(path)
 
 class MRGDataset(VisionDataset):
-    def __init__(self, args, split, loader = pil_loader, extensions=None, transform=None,
+    def __init__(self, args, loader = pil_loader, extensions=None, transform=None,
                  target_transform=None, is_valid_file=None):
 
         self.dataset_name = args.dataset_name
@@ -58,15 +58,13 @@ class MRGDataset(VisionDataset):
         super(MRGDataset, self).__init__(args, transform=transform,
                                             target_transform=target_transform)
 
-        self.split = split
-
         try: 
             self.ann = json.load(open(self.ann_path))
         except FileNotFoundError:
             print("ann file is not existing, quit")
             os.exit(0)
-        #load items
-        items = self.ann[self.split]
+        #load items, use train + val split
+        items = self.ann['train'] + self.ann['val']
         # update args
         imgs = [item['image_path'] for item in items]
         reports = [item['report'] for item in items]
@@ -87,7 +85,7 @@ class MRGDataset(VisionDataset):
         
         self.samples = list(zip(imgs,reports))
 
-        print("{}: {} set loaded, including {} image".format(self.dataset_name,self.split,len(self.samples)))
+        print("{}: train&val split, including {} image".format(self.dataset_name,len(self.samples)))
 
     def __len__(self):
         return len(self.samples)
