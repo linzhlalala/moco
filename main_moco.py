@@ -277,7 +277,7 @@ def main_worker(gpu, ngpus_per_node, args):
     if not os.path.exists(log_path):
             os.makedirs(log_path)
             
-    record_path = os.path.join(log_path,'logs.csv')
+    record_path = os.path.join(log_path,args.job_name+'.csv')
 
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
