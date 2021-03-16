@@ -47,12 +47,12 @@ parser.add_argument('--epochs', default=50, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=256, type=int,
+parser.add_argument('-b', '--batch-size', default=64, type=int,
                     metavar='N',
                     help='mini-batch size (default: 256), this is the total '
                          'batch size of all GPUs on the current node when '
                          'using Data Parallel or Distributed Data Parallel')
-parser.add_argument('--lr', '--learning-rate', default=0.01, type=float,
+parser.add_argument('--lr', '--learning-rate', default=0.005, type=float,
                     metavar='LR', help='initial learning rate', dest='lr')
 parser.add_argument('--schedule', default=[120, 160], nargs='*', type=int,
                     help='learning rate schedule (when to drop lr by 10x)')
@@ -305,7 +305,8 @@ def main_worker(gpu, ngpus_per_node, args):
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
                 'optimizer' : optimizer.state_dict(),
-            }, is_best=is_best, filename=os.path.join(log_path,'checkpoint_{:04d}.pth.tar'.format(epoch)))
+            }, is_best=is_best, filename=os.path.join(log_path,'checkpoint_best.pth'))
+            #'checkpoint_{:04d}.pth.tar'.format(epoch)))
     
     best_log['best_flag'] = 1
     print_log_tocsv(best_log,record_path)
@@ -371,9 +372,11 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 
 
 def save_checkpoint(state, is_best, filename):
-    torch.save(state, filename)
+    
     if is_best:
-        shutil.copyfile(filename, 'model_best.pth.tar')
+        # ONLY SAVE THE BEST ONE
+        torch.save(state, filename)
+        #shutil.copyfile(filename, 'model_best.pth.tar')
 
 
 class AverageMeter(object):
