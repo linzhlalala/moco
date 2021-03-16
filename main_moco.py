@@ -292,7 +292,11 @@ def main_worker(gpu, ngpus_per_node, args):
         
         print_log_tocsv(log,record_path)
 
-        is_best = True if acc1 >= best_acc1 else False            
+        is_best = False 
+        
+        if acc1 >= best_acc1:
+            is_best = True
+            best_log = log          
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
