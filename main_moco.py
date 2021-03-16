@@ -8,6 +8,7 @@ import random
 import shutil
 import time
 import warnings
+import pandas as pd
 
 import torch
 import torch.nn as nn
@@ -21,7 +22,6 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
-from torch.utils.tensorboard import SummaryWriter
 
 import moco.loader
 import moco.builder
@@ -34,23 +34,23 @@ model_names = sorted(name for name in models.__dict__
 parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('--dataset_name',  type =str, default='iu_xray',
                     help='tinyimagenet/iu_xray/mimic_cxr_256')
-parser.add_argument('-a', '--arch', type =str, default='resnet18',metavar='ARCH', 
+parser.add_argument('-a', '--arch', type =str, default='resnet101',metavar='ARCH', 
                     choices=model_names,
                     help='model architecture: ' +
                         ' | '.join(model_names) +
-                        ' (default: resnet50)')
-parser.add_argument('-j', '--workers', default=0, type=int, metavar='N',
+                        ' (default: resnet101)')
+parser.add_argument('-j', '--workers', default=32, type=int, metavar='N',
                     help='number of data loading workers (default: 32)')
-parser.add_argument('--epochs', default=5, type=int, metavar='N',
+parser.add_argument('--epochs', default=50, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
-parser.add_argument('-b', '--batch-size', default=64, type=int,
+parser.add_argument('-b', '--batch-size', default=256, type=int,
                     metavar='N',
                     help='mini-batch size (default: 256), this is the total '
                          'batch size of all GPUs on the current node when '
                          'using Data Parallel or Distributed Data Parallel')
-parser.add_argument('--lr', '--learning-rate', default=0.005, type=float,
+parser.add_argument('--lr', '--learning-rate', default=0.01, type=float,
                     metavar='LR', help='initial learning rate', dest='lr')
 parser.add_argument('--schedule', default=[120, 160], nargs='*', type=int,
                     help='learning rate schedule (when to drop lr by 10x)')
@@ -92,11 +92,11 @@ parser.add_argument('--moco-t', default=0.07, type=float,
                     help='softmax temperature (default: 0.07)')
 
 # options for moco v2
-parser.add_argument('--mlp', action='store_true',
+parser.add_argument('--mlp', default=True, type=bool,
                     help='use mlp head')
-parser.add_argument('--aug-plus', action='store_true',
+parser.add_argument('--aug-plus', default=True, type=bool,
                     help='use moco v2 data augmentation')
-parser.add_argument('--cos', action='store_true',
+parser.add_argument('--cos', default=True, type=bool,
                     help='use cosine lr schedule')
 
 
@@ -272,15 +272,16 @@ def main_worker(gpu, ngpus_per_node, args):
         num_workers=args.workers, pin_memory=True, sampler=train_sampler, drop_last=True)
 
     log_path = os.path.join('logs',args.dataset_name)
-    summary_writer = SummaryWriter(log_path)
+    record_path = os.path.join(log_path,args.dataset_name+'.csv')
 
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             train_sampler.set_epoch(epoch)
         adjust_learning_rate(optimizer, epoch, args)
-
         # train for one epoch
-        train(train_loader, model, criterion, optimizer, epoch, args, summary_writer)
+        lossvalue,acc1,acc5,epoch_time = train(train_loader, model, criterion, optimizer, epoch, args)
+        log = {'epoch': epoch + 1,'loss':lossvalue,'acc1':acc1,'acc5':acc5,'epoch_time':epoch_time}
+        print_log_tocsv(log,record_path)
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
                 and args.rank % ngpus_per_node == 0):
@@ -290,9 +291,20 @@ def main_worker(gpu, ngpus_per_node, args):
                 'state_dict': model.state_dict(),
                 'optimizer' : optimizer.state_dict(),
             }, is_best=False, filename=os.path.join(log_path,'checkpoint_{:04d}.pth.tar'.format(epoch)))
+        
 
+def print_log_tocsv(log,filename):
+    crt_time = time.asctime(time.localtime(time.time()))
+    log['time'] = crt_time
 
-def train(train_loader, model, criterion, optimizer, epoch, args, summary_writer = None):
+    if not os.path.exists(filename):
+        record_table = pd.DataFrame()
+    else:
+        record_table = pd.read_csv(filename)
+    record_table = record_table.append(log, ignore_index=True)
+    record_table.to_csv(filename, index=False)
+
+def train(train_loader, model, criterion, optimizer, epoch, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
@@ -337,11 +349,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args, summary_writer
 
         if i % args.print_freq == 0:
             progress.display(i)
-    # epoch level
-    if summary_writer != None:
-        summary_writer.add_scalar('losses', loss.item(), epoch)
-        summary_writer.add_scalar('Acc@1', acc1[0], epoch)
-        summary_writer.add_scalar('Acc@5', acc5[0], epoch)
+    
+    return loss.item(),top1.avg.item(),top5.avg.item(),batch_time.sum
 
 
 def save_checkpoint(state, is_best, filename):
@@ -393,7 +402,7 @@ class ProgressMeter(object):
 
 def adjust_learning_rate(optimizer, epoch, args):
     """Decay the learning rate based on schedule"""
-    lr = args.lr
+    lr = args.lr # the base lr
     if args.cos:  # cosine lr schedule
         lr *= 0.5 * (1. + math.cos(math.pi * epoch / args.epochs))
     else:  # stepwise lr schedule
@@ -416,7 +425,7 @@ def accuracy(output, target, topk=(1,)):
 
         res = []
         for k in topk:
-            correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
+            correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True)
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
 
