@@ -296,6 +296,7 @@ def main_worker(gpu, ngpus_per_node, args):
         
         if acc1 >= best_acc1:
             is_best = True
+            best_acc1 = acc1
             best_log = log          
 
         if not args.multiprocessing_distributed or (args.multiprocessing_distributed
@@ -306,6 +307,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 'state_dict': model.state_dict(),
                 'optimizer' : optimizer.state_dict(),
             }, is_best=is_best, filename=os.path.join(log_path,'checkpoint_best.pth'))
+            # save only best
             #'checkpoint_{:04d}.pth.tar'.format(epoch)))
     
     best_log['best_flag'] = 1
