@@ -1,0 +1,84 @@
+Namespace(arch='resnet101', aug_plus=True, batch_size=128, cos=True, dataset_name='iu_xray', dist_backend=None, dist_url=None, distributed=False, epochs=200, gpu=0, job_name='mmt99', lr=0.03, mlp=True, moco_dim=128, moco_k=65536, moco_m=0.99, moco_t=0.07, momentum=0.9, multiprocessing_distributed=False, print_freq=10, rank=-1, resume='', schedule=[120, 160], seed=None, start_epoch=0, weight_decay=0.0001, workers=32, world_size=-1)
+Use GPU: 0 for training
+=> creating model 'resnet101'
+run with no DistributedDataParallel
+device: 0
+iu_xray: train&val split, including 4730 image
+main_moco.py:119: UserWarning: You have chosen a specific GPU. This will completely disable data parallelism.
+  warnings.warn('You have chosen a specific GPU. This will completely '
+Traceback (most recent call last):
+  File "main_moco.py", line 439, in <module>
+    main()
+  File "main_moco.py", line 139, in main
+    main_worker(args.gpu, ngpus_per_node, args)
+  File "main_moco.py", line 287, in main_worker
+    lossvalue,acc1,acc5,epoch_time = train(train_loader, model, criterion, optimizer, epoch, args)
+  File "main_moco.py", line 336, in train
+    output, target = model(im_q=images[0], im_k=images[1])
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torch/nn/modules/module.py", line 722, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/projects/ub62/imcaption/moco/moco/builder.py", line 168, in forward
+    q = self.encoder_q(im_q)  # queries: NxC
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torch/nn/modules/module.py", line 722, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torchvision/models/resnet.py", line 220, in forward
+    return self._forward_impl(x)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torchvision/models/resnet.py", line 210, in _forward_impl
+    x = self.layer3(x)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torch/nn/modules/module.py", line 722, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torch/nn/modules/container.py", line 117, in forward
+    input = module(input)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torch/nn/modules/module.py", line 722, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torchvision/models/resnet.py", line 105, in forward
+    out = self.bn1(out)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torch/nn/modules/module.py", line 722, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torch/nn/modules/batchnorm.py", line 136, in forward
+    self.weight, self.bias, bn_training, exponential_average_factor, self.eps)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torch/nn/functional.py", line 2016, in batch_norm
+    training, momentum, eps, torch.backends.cudnn.enabled
+RuntimeError: CUDA out of memory. Tried to allocate 26.00 MiB (GPU 0; 15.78 GiB total capacity; 14.48 GiB already allocated; 11.50 MiB free; 14.73 GiB reserved in total by PyTorch)
+Namespace(arch='resnet101', aug_plus=True, batch_size=128, cos=True, dataset_name='iu_xray', dist_backend=None, dist_url=None, distributed=False, epochs=200, gpu=0, job_name='mmt9', lr=0.03, mlp=True, moco_dim=128, moco_k=65536, moco_m=0.9, moco_t=0.07, momentum=0.9, multiprocessing_distributed=False, print_freq=10, rank=-1, resume='', schedule=[120, 160], seed=None, start_epoch=0, weight_decay=0.0001, workers=32, world_size=-1)
+Use GPU: 0 for training
+=> creating model 'resnet101'
+run with no DistributedDataParallel
+device: 0
+iu_xray: train&val split, including 4730 image
+main_moco.py:119: UserWarning: You have chosen a specific GPU. This will completely disable data parallelism.
+  warnings.warn('You have chosen a specific GPU. This will completely '
+Traceback (most recent call last):
+  File "main_moco.py", line 439, in <module>
+    main()
+  File "main_moco.py", line 139, in main
+    main_worker(args.gpu, ngpus_per_node, args)
+  File "main_moco.py", line 287, in main_worker
+    lossvalue,acc1,acc5,epoch_time = train(train_loader, model, criterion, optimizer, epoch, args)
+  File "main_moco.py", line 336, in train
+    output, target = model(im_q=images[0], im_k=images[1])
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torch/nn/modules/module.py", line 722, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/projects/ub62/imcaption/moco/moco/builder.py", line 168, in forward
+    q = self.encoder_q(im_q)  # queries: NxC
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torch/nn/modules/module.py", line 722, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torchvision/models/resnet.py", line 220, in forward
+    return self._forward_impl(x)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torchvision/models/resnet.py", line 210, in _forward_impl
+    x = self.layer3(x)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torch/nn/modules/module.py", line 722, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torch/nn/modules/container.py", line 117, in forward
+    input = module(input)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torch/nn/modules/module.py", line 722, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torchvision/models/resnet.py", line 105, in forward
+    out = self.bn1(out)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torch/nn/modules/module.py", line 722, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torch/nn/modules/batchnorm.py", line 136, in forward
+    self.weight, self.bias, bn_training, exponential_average_factor, self.eps)
+  File "/projects/ub62/zlin/conda_envs/lzh/lib/python3.7/site-packages/torch/nn/functional.py", line 2016, in batch_norm
+    training, momentum, eps, torch.backends.cudnn.enabled
+RuntimeError: CUDA out of memory. Tried to allocate 26.00 MiB (GPU 0; 15.78 GiB total capacity; 14.48 GiB already allocated; 15.50 MiB free; 14.73 GiB reserved in total by PyTorch)
