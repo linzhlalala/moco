@@ -166,7 +166,7 @@ class MoCo(nn.Module):
 
         # compute query features
         q = self.encoder_q(im_q)  # queries: NxC
-        q = nn.functional.normalize(q, dim=1)
+        q = nn.functional.normalize(q, dim=1) # batch X dim
 
         # compute key features
         with torch.no_grad():  # no gradient to keys
@@ -176,26 +176,26 @@ class MoCo(nn.Module):
             im_k, idx_unshuffle = self._batch_shuffle(im_k)
 
             k = self.encoder_k(im_k)  # keys: NxC
-            k = nn.functional.normalize(k, dim=1)
+            k = nn.functional.normalize(k, dim=1) 
 
             # undo shuffle
-            k = self._batch_unshuffle(k, idx_unshuffle)
+            k = self._batch_unshuffle(k, idx_unshuffle) # batch X dim
 
         # compute logits
         # Einstein sum is more intuitive
         # positive logits: Nx1
-        l_pos = torch.einsum('nc,nc->n', [q, k]).unsqueeze(-1)
+        l_pos = torch.einsum('nc,nc->n', [q, k]).unsqueeze(-1) # batch X 1
         # negative logits: NxK
-        l_neg = torch.einsum('nc,ck->nk', [q, self.queue.clone().detach()])
+        l_neg = torch.einsum('nc,ck->nk', [q, self.queue.clone().detach()]) # batch X queue_size
 
         # logits: Nx(1+K)
-        logits = torch.cat([l_pos, l_neg], dim=1)
+        logits = torch.cat([l_pos, l_neg], dim=1) # batch X (1 + queue_size)
 
         # apply temperature
         logits /= self.T
 
         # labels: positive key indicators
-        labels = torch.zeros(logits.shape[0], dtype=torch.long).cuda()
+        labels = torch.zeros(logits.shape[0], dtype=torch.long).cuda() # batch
 
         # dequeue and enqueue
         self._dequeue_and_enqueue(k)

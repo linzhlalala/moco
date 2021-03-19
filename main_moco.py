@@ -35,7 +35,7 @@ parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 parser.add_argument('--dataset_name',  type =str, default='iu_xray',
                     help='tinyimagenet/iu_xray/mimic_cxr_256')
 parser.add_argument('--job_name',  type =str, default='dfpara',
-                    help='tinyimagenet/iu_xray/mimic_cxr_256')
+                    help='any')
 parser.add_argument('-a', '--arch', type =str, default='resnet101',metavar='ARCH', 
                     choices=model_names,
                     help='model architecture: ' +
@@ -349,6 +349,8 @@ def train(train_loader, model, criterion, optimizer, epoch, args):
 
         # compute output
         output, target = model(im_q=images[0], im_k=images[1])
+        # output: batch X (1+ queue_size)
+        # target: batch 
         loss = criterion(output, target)
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
