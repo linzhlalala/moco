@@ -5,3 +5,4 @@ m3/
 *.sh
 *.out
 *.err
+weights/
