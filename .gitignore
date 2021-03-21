@@ -3,3 +3,5 @@ data/
 logs/
 m3/
 *.sh
+*.out
+*.err
