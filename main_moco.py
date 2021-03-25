@@ -260,7 +260,7 @@ def main_worker(gpu, ngpus_per_node, args):
         train_dataset = datasets.ImageFolder(
             traindir,
             transform = moco.loader.TwoCropsTransform(transforms.Compose(augmentation)))
-    elif args.dataset_name in ['iu_xray','mimic_cxr_256']:
+    elif args.dataset_name in ['iu_xray','mimic_cxr_256','retina3']:
         train_dataset = MRGDataset(
             args,transform = moco.loader.TwoCropsTransform(transforms.Compose(augmentation)))
 

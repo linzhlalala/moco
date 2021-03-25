@@ -69,7 +69,7 @@ class MRGDataset(VisionDataset):
         imgs = [item['image_path'] for item in items]
         reports = [item['report'] for item in items]
 
-        if self.dataset_name == 'mimic_cxr_256':
+        if self.dataset_name in ['mimic_cxr_256','retina3']:
             # for the mimic_cxr_256, 
             # actually, the mimic is with unknown image nums (1~3) and unknown views
             # now the dataset maps multiple images to one report 
